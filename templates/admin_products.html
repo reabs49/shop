@@ -1,0 +1,320 @@
+{% extends "admin_base.html" %}
+
+
+{% block title %}
+    Products — My Shop
+{% endblock %}
+
+
+{% block content %}
+
+<header class="products-header">
+
+    <div>
+
+        <span class="admin-eyebrow">
+            Catalog
+        </span>
+
+        <h1>
+            Products
+        </h1>
+
+        <p>
+            Manage your catalog, stock and product information.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('admin_add_product') }}"
+        class="btn btn-primary product-add-button"
+    >
+        + Add product
+    </a>
+
+</header>
+
+
+<div class="products-table-wrapper">
+
+    <table class="products-table">
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Product
+                </th>
+
+                <th>
+                    Category
+                </th>
+
+                <th>
+                    Price
+                </th>
+
+                <th>
+                    Stock
+                </th>
+
+                <th>
+                    Status
+                </th>
+
+                <th>
+                    Actions
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for product in products %}
+
+            <tr>
+
+                <!-- PRODUCT -->
+
+                <td>
+
+                    <div class="product-table-cell">
+
+                        {% if product.images %}
+
+                            <img
+                                src="{{ url_for(
+                                    'static',
+                                    filename='images/products/' ~
+                                    product.images[0].filename
+                                ) }}"
+                                alt="{{ product.name }}"
+                                class="product-table-image"
+                            >
+
+                        {% else %}
+
+                            <div class="product-table-image"></div>
+
+                        {% endif %}
+
+
+                        <div>
+
+                            <strong>
+                                {{ product.name }}
+                            </strong>
+
+                            {% if product.description %}
+
+                                <p>
+                                    {{ product.description }}
+                                </p>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </td>
+
+
+                <!-- CATEGORY -->
+
+                <td>
+
+                    {% if product.category %}
+                        {{ product.category }}
+                    {% else %}
+                        <span class="product-table-muted">—</span>
+                    {% endif %}
+
+                </td>
+
+
+                <!-- PRICE -->
+
+                <td>
+
+                    {% if product.offer_active %}
+
+                        <div class="product-table-price">
+
+                            <s>{{ "%.0f"|format(product.regular_price) }} DA</s>
+
+                            <strong>{{ "%.0f"|format(product.price) }} DA</strong>
+
+                        </div>
+
+                    {% else %}
+
+                        {{ "%.0f"|format(product.price) }} DA
+
+                    {% endif %}
+
+                </td>
+
+
+                <!-- STOCK -->
+
+                <td>
+
+                    {{ product.stock }}
+
+                </td>
+
+
+                <!-- STATUS -->
+
+                <td>
+
+                    <div class="product-status-cell">
+
+                        {% if product.is_sold %}
+
+                            <span class="product-status sold">
+                                Sold
+                            </span>
+
+                        {% elif product.stock == 0 %}
+
+                            <span class="product-status sold">
+                                Out of stock
+                            </span>
+
+                        {% else %}
+
+                            <span class="product-status available">
+                                Available
+                            </span>
+
+                        {% endif %}
+
+                        {% if product.offer_active %}
+
+                            <span class="product-status promo">
+                                Solde
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </td>
+
+
+                <!-- ACTIONS -->
+
+                <td>
+
+                    <div class="product-actions">
+
+                        <a
+                            href="{{ url_for(
+                                'admin_edit_product',
+                                product_id=product.id
+                            ) }}"
+                            class="product-action-edit"
+                        >
+                            Edit
+                        </a>
+
+
+                        <button
+                            type="submit"
+                            form="delete-product-{{ product.id }}"
+                            class="product-action-delete"
+                            data-product-name="{{ product.name }}"
+                        >
+                            Delete
+                        </button>
+
+                    </div>
+
+                    <form
+                        id="delete-product-{{ product.id }}"
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_delete_product',
+                            product_id=product.id
+                        ) }}"
+                        class="delete-product-form"
+                        hidden
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                    </form>
+
+                </td>
+
+            </tr>
+
+
+            {% else %}
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="empty-row"
+                >
+                    No products yet.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(".delete-product-form").forEach(function (form) {
+
+        form.addEventListener("submit", function (event) {
+
+            const button = document.querySelector(
+                'button[form="' + form.id + '"]'
+            );
+
+            const name =
+                button && button.dataset.productName
+                    ? button.dataset.productName
+                    : "this product";
+
+            const confirmed = window.confirm(
+                'Delete "' + name + '"? This cannot be undone.'
+            );
+
+            if (!confirmed) {
+                event.preventDefault();
+            }
+
+        });
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,427 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+    Settings — My Shop
+{% endblock %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/settings.css') }}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page-header">
+    <div>
+        <span class="admin-eyebrow">Configuration</span>
+        <h1>Settings</h1>
+        <p>Control how your shop operates and what customers see.</p>
+    </div>
+</div>
+
+<div class="settings-layout">
+
+    <form
+        method="POST"
+        action="{{ url_for('admin_settings') }}"
+        class="settings-main"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+        <!-- ==================================================
+             SHOP INFORMATION
+             ================================================== -->
+
+        <section class="form-section settings-section">
+
+            <div class="form-section-heading">
+                <span class="settings-section-number">01</span>
+                <div>
+                    <h2>Shop information</h2>
+                    <p>Basic information about your shop.</p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="shop_name">Shop name</label>
+                <input
+                    type="text"
+                    id="shop_name"
+                    name="shop_name"
+                    maxlength="150"
+                    value="{{ settings.shop_name }}"
+                    required
+                >
+            </div>
+
+            <div class="field">
+                <label for="shop_description">Shop description</label>
+                <textarea
+                    id="shop_description"
+                    name="shop_description"
+                    maxlength="5000"
+                    rows="5"
+                    placeholder="Tell customers what your shop is about..."
+                >{{ settings.shop_description or "" }}</textarea>
+            </div>
+
+            <div class="form-grid">
+
+                <div class="field">
+                    <label for="shop_phone">Shop phone</label>
+                    <input
+                        type="tel"
+                        id="shop_phone"
+                        name="shop_phone"
+                        maxlength="30"
+                        value="{{ settings.shop_phone or "" }}"
+                        placeholder="+213 ..."
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="shop_email">Shop email</label>
+                    <input
+                        type="email"
+                        id="shop_email"
+                        name="shop_email"
+                        maxlength="254"
+                        value="{{ settings.shop_email or "" }}"
+                        placeholder="shop@example.com"
+                    >
+                </div>
+
+            </div>
+
+            <div class="field">
+                <label for="shop_address">Shop address</label>
+                <textarea
+                    id="shop_address"
+                    name="shop_address"
+                    maxlength="1000"
+                    rows="3"
+                    placeholder="Shop address..."
+                >{{ settings.shop_address or "" }}</textarea>
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             DELIVERY
+             ================================================== -->
+
+        <section class="form-section settings-section">
+
+            <div class="form-section-heading">
+                <span class="settings-section-number">02</span>
+                <div>
+                    <h2>Delivery</h2>
+                    <p>Set delivery availability and charges.</p>
+                </div>
+            </div>
+
+            <label class="settings-toggle-row">
+                <div>
+                    <strong>Enable delivery</strong>
+                    <span>Customers can place delivery orders when this is enabled.</span>
+                </div>
+
+                <input
+                    type="checkbox"
+                    name="delivery_enabled"
+                    {% if settings.delivery_enabled %}checked{% endif %}
+                >
+
+                <span class="toggle-ui"></span>
+            </label>
+
+            <div class="form-grid settings-number-grid">
+
+                <div class="field">
+                    <label for="delivery_fee">Default delivery fee</label>
+                    <div class="input-with-suffix">
+                        <input
+                            type="number"
+                            id="delivery_fee"
+                            name="delivery_fee"
+                            min="0"
+                            step="0.01"
+                            value="{{ settings.delivery_fee }}"
+                            required
+                        >
+                        <span>DA</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="free_delivery_threshold">Free delivery above</label>
+                    <div class="input-with-suffix">
+                        <input
+                            type="number"
+                            id="free_delivery_threshold"
+                            name="free_delivery_threshold"
+                            min="0"
+                            step="0.01"
+                            value="{% if settings.free_delivery_threshold is not none %}{{ settings.free_delivery_threshold }}{% endif %}"
+                            placeholder="Optional"
+                        >
+                        <span>DA</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="settings-help">
+                Leave “Free delivery above” empty when you do not want a free-delivery threshold.
+                The default delivery fee is only used as the starting price for a new province —
+                edit the actual per-province prices below.
+            </p>
+
+            <div class="settings-readonly-row">
+                <div>
+                    <strong>Delivery fee by province</strong>
+                    <span>Set a different delivery price for each Algerian wilaya.</span>
+                </div>
+                <a
+                    href="{{ url_for('admin_delivery_fees') }}"
+                    class="admin-secondary-button"
+                >
+                    Edit province fees →
+                </a>
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             ORDERS
+             ================================================== -->
+
+        <section class="form-section settings-section">
+
+            <div class="form-section-heading">
+                <span class="settings-section-number">03</span>
+                <div>
+                    <h2>Orders</h2>
+                    <p>Control whether the storefront accepts new demands.</p>
+                </div>
+            </div>
+
+            <label class="settings-toggle-row">
+                <div>
+                    <strong>Accept new orders</strong>
+                    <span>Turn this off when the shop is temporarily unable to receive orders.</span>
+                </div>
+
+                <input
+                    type="checkbox"
+                    name="allow_orders"
+                    {% if settings.allow_orders %}checked{% endif %}
+                >
+
+                <span class="toggle-ui"></span>
+            </label>
+
+            <div class="settings-readonly-row">
+                <div>
+                    <strong>Payment method</strong>
+                    <span>The current shop checkout uses cash on delivery.</span>
+                </div>
+                <strong class="settings-badge">Cash on delivery</strong>
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             OFFERS
+             ================================================== -->
+
+        <section class="form-section settings-section">
+
+            <div class="form-section-heading">
+                <span class="settings-section-number">04</span>
+                <div>
+                    <h2>Offers</h2>
+                    <p>Set the default duration used when creating promotions.</p>
+                </div>
+            </div>
+
+            <div class="field settings-short-field">
+                <label for="default_offer_duration_days">Default offer duration</label>
+
+                <div class="input-with-suffix">
+                    <input
+                        type="number"
+                        id="default_offer_duration_days"
+                        name="default_offer_duration_days"
+                        min="1"
+                        max="365"
+                        step="1"
+                        value="{{ settings.default_offer_duration_days }}"
+                        required
+                    >
+                    <span>days</span>
+                </div>
+            </div>
+
+            <p class="settings-help">
+                This is only the default. Each product can have its own offer duration.
+            </p>
+
+        </section>
+
+
+        <!-- ==================================================
+             INVENTORY
+             ================================================== -->
+
+        <section class="form-section settings-section">
+
+            <div class="form-section-heading">
+                <span class="settings-section-number">05</span>
+                <div>
+                    <h2>Inventory</h2>
+                    <p>Choose when the dashboard should warn you about low stock.</p>
+                </div>
+            </div>
+
+            <div class="field settings-short-field">
+                <label for="low_stock_threshold">Low-stock threshold</label>
+
+                <div class="input-with-suffix">
+                    <input
+                        type="number"
+                        id="low_stock_threshold"
+                        name="low_stock_threshold"
+                        min="0"
+                        max="1000000"
+                        step="1"
+                        value="{{ settings.low_stock_threshold }}"
+                        required
+                    >
+                    <span>units</span>
+                </div>
+            </div>
+
+            <p class="settings-help">
+                Products at or below this quantity will appear in the dashboard's low-stock section.
+            </p>
+
+        </section>
+
+
+        <div class="settings-save-row">
+            <button
+                type="submit"
+                class="btn btn-primary settings-save-button"
+            >
+                Save settings
+            </button>
+        </div>
+
+    </form>
+
+
+    <!-- ======================================================
+         SECURITY
+         ====================================================== -->
+
+    <aside class="settings-sidebar">
+
+        <section class="form-section settings-section security-section">
+
+            <div class="form-section-heading">
+                <span class="settings-section-number">06</span>
+                <div>
+                    <h2>Security</h2>
+                    <p>Manage your admin account.</p>
+                </div>
+            </div>
+
+            <div class="settings-account-card">
+
+                <span>Signed in as</span>
+
+                <strong>
+                    {{ current_user.username }}
+                </strong>
+
+            </div>
+
+            <form
+                method="POST"
+                action="{{ url_for('admin_change_password') }}"
+                class="password-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <div class="field">
+                    <label for="current_password">Current password</label>
+                    <input
+                        type="password"
+                        id="current_password"
+                        name="current_password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="new_password">New password</label>
+                    <input
+                        type="password"
+                        id="new_password"
+                        name="new_password"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="confirm_password">Confirm new password</label>
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-secondary password-button"
+                >
+                    Change password
+                </button>
+
+            </form>
+
+            <div class="settings-security-note">
+                <strong>Protected admin area</strong>
+                <span>Keep your password private and use a strong unique password.</span>
+            </div>
+
+        </section>
+
+    </aside>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Your cart - My Shop
+    </title>
+
+    <meta name="robots" content="noindex">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/base.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="container">
+
+        <a
+            href="/"
+            class="logo"
+        >
+            My Shop
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <a href="/#products">Products</a>
+            <a href="/#about">About</a>
+
+            <a href="{{ url_for('view_cart') }}" class="cart-link active">
+                Cart
+                {% if cart_count > 0 %}
+                    <span class="cart-badge">{{ cart_count }}</span>
+                {% endif %}
+            </a>
+        </nav>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <section class="cart-page">
+
+        <div class="container">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    <div class="flash-messages">
+
+                        {% for category, message in messages %}
+
+                            <div class="flash flash-{{ category }}">
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <span class="shop-stamp">
+                {{ shop_settings.shop_name }}
+            </span>
+
+            <h1 class="cart-title">
+                Your cart
+            </h1>
+
+
+            {% if items %}
+
+                <div class="cart-layout">
+
+                    <!-- ================================================= -->
+                    <!-- ITEMS -->
+                    <!-- ================================================= -->
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('update_cart') }}"
+                        class="cart-items-form"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        {% for item in items %}
+
+                            <div class="cart-row">
+
+                                <a
+                                    href="{{ url_for(
+                                        'product_detail',
+                                        product_id=item.product.id
+                                    ) }}"
+                                    class="cart-row-image"
+                                >
+
+                                    {% if item.product.images %}
+
+                                        <img
+                                            src="{{ url_for(
+                                                'static',
+                                                filename='images/products/' ~
+                                                item.product.images[0].filename
+                                            ) }}"
+                                            alt="{{ item.product.name }}"
+                                        >
+
+                                    {% endif %}
+
+                                </a>
+
+
+                                <div class="cart-row-info">
+
+                                    <a
+                                        href="{{ url_for(
+                                            'product_detail',
+                                            product_id=item.product.id
+                                        ) }}"
+                                        class="cart-row-name"
+                                    >
+                                        {{ item.product.name }}
+                                    </a>
+
+                                    <span class="cart-row-unit-price">
+                                        {{ "%.0f"|format(item.unit_price) }} DA each
+                                    </span>
+
+                                    {% if item.quantity >= item.product.stock %}
+
+                                        <span class="cart-row-stock-note">
+                                            Only {{ item.product.stock }} in stock
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div class="cart-row-qty">
+
+                                    <label for="qty_{{ item.product.id }}">
+                                        Qty
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        id="qty_{{ item.product.id }}"
+                                        name="qty_{{ item.product.id }}"
+                                        min="0"
+                                        max="{{ item.product.stock }}"
+                                        value="{{ item.quantity }}"
+                                    >
+
+                                </div>
+
+
+                                <div class="cart-row-total">
+                                    {{ "%.0f"|format(item.line_total) }} DA
+                                </div>
+
+
+                                <button
+                                    type="submit"
+                                    formaction="{{ url_for(
+                                        'remove_from_cart',
+                                        product_id=item.product.id
+                                    ) }}"
+                                    class="cart-row-remove"
+                                    aria-label="Remove {{ item.product.name }}"
+                                >
+                                    Remove
+                                </button>
+
+                            </div>
+
+                        {% endfor %}
+
+
+                        <button
+                            type="submit"
+                            class="cart-update-button"
+                        >
+                            Update quantities
+                        </button>
+
+                    </form>
+
+
+                    <!-- ================================================= -->
+                    <!-- SUMMARY + CHECKOUT -->
+                    <!-- ================================================= -->
+
+                    <div class="cart-checkout-panel">
+
+                        <div class="order-summary">
+
+                            <div class="order-summary-row">
+                                <span>Subtotal</span>
+                                <strong id="summary-subtotal">{{ "%.0f"|format(subtotal) }} DA</strong>
+                            </div>
+
+                            <div class="order-summary-row">
+                                <span>Delivery</span>
+                                <strong id="summary-delivery">—</strong>
+                            </div>
+
+                            <div class="order-summary-total">
+                                <span>Total</span>
+                                <strong id="summary-total">{{ "%.0f"|format(subtotal) }} DA</strong>
+                            </div>
+
+                        </div>
+
+
+                        {% if shop_settings.allow_orders %}
+
+                            <form
+                                id="checkout-form"
+                                class="order-form"
+                                method="POST"
+                                action="{{ url_for('checkout') }}"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                                <div class="form-group">
+                                    <label for="customer_name">Full name</label>
+                                    <input
+                                        type="text"
+                                        id="customer_name"
+                                        name="customer_name"
+                                        maxlength="150"
+                                        autocomplete="name"
+                                        required
+                                        placeholder="Your full name"
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="phone">Phone number</label>
+                                    <input
+                                        type="tel"
+                                        id="phone"
+                                        name="phone"
+                                        maxlength="30"
+                                        autocomplete="tel"
+                                        required
+                                        placeholder="Your phone number"
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="wilaya_code">Province (wilaya)</label>
+                                    <select
+                                        id="wilaya_code"
+                                        name="wilaya_code"
+                                        required
+                                    >
+                                        <option value="" disabled selected>
+                                            Select your province
+                                        </option>
+
+                                        {% for code, name in wilayas %}
+                                            <option value="{{ code }}">
+                                                {{ "%02d"|format(code) }} — {{ name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="address">Delivery address</label>
+                                    <textarea
+                                        id="address"
+                                        name="address"
+                                        rows="4"
+                                        maxlength="1000"
+                                        autocomplete="street-address"
+                                        placeholder="Enter your delivery address"
+                                    ></textarea>
+                                </div>
+
+                                <div class="order-location-choice">
+
+                                    <div class="location-divider">
+                                        <span>OR</span>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        id="location-button"
+                                        class="location-button"
+                                    >
+                                        Use my current location
+                                    </button>
+
+                                    <p
+                                        id="location-status"
+                                        class="location-status"
+                                        aria-live="polite"
+                                    ></p>
+
+                                </div>
+
+                                <input type="hidden" id="latitude" name="latitude">
+                                <input type="hidden" id="longitude" name="longitude">
+
+                                <button
+                                    type="submit"
+                                    class="order-submit"
+                                >
+                                    Place order
+                                </button>
+
+                            </form>
+
+                        {% else %}
+
+                            <p class="cart-orders-paused">
+                                New orders are temporarily unavailable.
+                                Please check back soon.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state cart-empty">
+
+                    <p>
+                        Your cart is empty.
+                    </p>
+
+                    <a
+                        href="{{ url_for('home') }}#products"
+                        class="hero-button"
+                    >
+                        Browse the shop
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+
+    <div class="container">
+
+        <p>
+            © 2026 My Shop
+        </p>
+
+    </div>
+
+</footer>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =========================================================
+       DELIVERY ESTIMATE
+       ========================================================= */
+
+    const SUBTOTAL = {{ subtotal | float }};
+
+    const WILAYA_FEES = {{ wilaya_fees | tojson }};
+
+    const DELIVERY_ENABLED = {{ shop_settings.delivery_enabled | tojson }};
+
+    const FREE_DELIVERY_THRESHOLD =
+        {% if shop_settings.free_delivery_threshold is not none %}{{ shop_settings.free_delivery_threshold | float }}{% else %}null{% endif %};
+
+    const wilayaSelect = document.getElementById("wilaya_code");
+    const summaryDelivery = document.getElementById("summary-delivery");
+    const summaryTotal = document.getElementById("summary-total");
+
+    function updateDeliveryEstimate() {
+
+        if (!summaryDelivery || !summaryTotal) {
+            return;
+        }
+
+        let deliveryFee = null;
+
+        if (wilayaSelect && wilayaSelect.value) {
+
+            if (!DELIVERY_ENABLED) {
+
+                deliveryFee = 0;
+
+            } else if (WILAYA_FEES[wilayaSelect.value] !== undefined) {
+
+                deliveryFee = WILAYA_FEES[wilayaSelect.value];
+
+                if (
+                    deliveryFee > 0 &&
+                    FREE_DELIVERY_THRESHOLD !== null &&
+                    SUBTOTAL >= FREE_DELIVERY_THRESHOLD
+                ) {
+                    deliveryFee = 0;
+                }
+
+            }
+
+        }
+
+        if (deliveryFee === null) {
+
+            summaryDelivery.textContent = "—";
+            summaryTotal.textContent = `${Math.round(SUBTOTAL)} DA`;
+
+        } else {
+
+            summaryDelivery.textContent =
+                deliveryFee > 0 ? `${Math.round(deliveryFee)} DA` : "Free";
+
+            summaryTotal.textContent =
+                `${Math.round(SUBTOTAL + deliveryFee)} DA`;
+
+        }
+
+    }
+
+    if (wilayaSelect) {
+        wilayaSelect.addEventListener("change", updateDeliveryEstimate);
+    }
+
+
+    /* =========================================================
+       LOCATION
+       ========================================================= */
+
+    const locationButton = document.getElementById("location-button");
+    const locationStatus = document.getElementById("location-status");
+    const latitudeInput = document.getElementById("latitude");
+    const longitudeInput = document.getElementById("longitude");
+
+    if (locationButton) {
+
+        locationButton.addEventListener("click", function () {
+
+            if (!navigator.geolocation) {
+                locationStatus.textContent =
+                    "Location is not supported by your browser.";
+                locationStatus.classList.add("error");
+                return;
+            }
+
+            locationButton.disabled = true;
+            locationStatus.textContent = "Getting your location...";
+            locationStatus.classList.remove("error");
+
+            navigator.geolocation.getCurrentPosition(
+
+                function (position) {
+
+                    latitudeInput.value = position.coords.latitude;
+                    longitudeInput.value = position.coords.longitude;
+
+                    locationStatus.textContent =
+                        "Your location has been saved.";
+                    locationStatus.classList.remove("error");
+                    locationStatus.classList.add("success");
+
+                    locationButton.textContent = "Location saved";
+                    locationButton.disabled = false;
+
+                },
+
+                function (error) {
+
+                    latitudeInput.value = "";
+                    longitudeInput.value = "";
+
+                    let message = "Could not get your location.";
+
+                    if (error.code === error.PERMISSION_DENIED) {
+                        message = "Location permission was denied.";
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        message = "Your location is currently unavailable.";
+                    } else if (error.code === error.TIMEOUT) {
+                        message = "Getting your location timed out.";
+                    }
+
+                    locationStatus.textContent = message;
+                    locationStatus.classList.add("error");
+                    locationButton.disabled = false;
+
+                },
+
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+
+            );
+
+        });
+
+    }
+
+
+    /* =========================================================
+       CHECKOUT VALIDATION — address OR GPS location
+       ========================================================= */
+
+    const checkoutForm = document.getElementById("checkout-form");
+    const addressInput = document.getElementById("address");
+
+    if (checkoutForm) {
+
+        checkoutForm.addEventListener("submit", function (event) {
+
+            const hasAddress = addressInput.value.trim() !== "";
+
+            const hasLocation =
+                latitudeInput.value.trim() !== "" &&
+                longitudeInput.value.trim() !== "";
+
+            if (!hasAddress && !hasLocation) {
+
+                event.preventDefault();
+
+                locationStatus.textContent =
+                    "Please enter a delivery address or use your current location.";
+                locationStatus.classList.add("error");
+
+                addressInput.focus();
+
+            }
+
+        });
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>

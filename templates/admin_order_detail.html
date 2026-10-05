@@ -1,0 +1,297 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+
+<div class="admin-page-header">
+    <div>
+        <span class="admin-eyebrow">Order #{{ order.id }}</span>
+        <h1>{{ order.customer_name }}</h1>
+        <p>
+            Placed on
+            {{ order.created_at.strftime("%Y-%m-%d at %H:%M") }}
+        </p>
+    </div>
+
+    <div class="order-detail-header-actions">
+
+        <a
+            href="{{ url_for('admin_order_invoice', order_id=order.id) }}"
+            class="admin-primary-button"
+        >
+            Download invoice
+        </a>
+
+        <a
+            href="{{ url_for('admin_orders') }}"
+            class="admin-secondary-button"
+        >
+            ← Back to orders
+        </a>
+
+    </div>
+</div>
+
+
+<div class="order-detail-grid">
+
+    <!-- CUSTOMER -->
+    <section class="admin-panel">
+
+        <div class="admin-panel-header">
+            <div>
+                <span class="admin-eyebrow">Customer</span>
+                <h2>Delivery information</h2>
+            </div>
+        </div>
+
+        <div class="order-detail-info">
+
+            <div class="order-detail-row">
+                <span>Name</span>
+                <strong>{{ order.customer_name }}</strong>
+            </div>
+
+            <div class="order-detail-row">
+                <span>Phone</span>
+                <strong>{{ order.phone }}</strong>
+            </div>
+
+            {% if order.wilaya_name %}
+
+            <div class="order-detail-row">
+                <span>Province</span>
+                <strong>{{ order.wilaya_name }}</strong>
+            </div>
+
+            {% endif %}
+
+            <div class="order-detail-row">
+                <span>Address</span>
+                <strong>{{ order.address }}</strong>
+            </div>
+
+            {% if order.latitude is not none and order.longitude is not none %}
+
+            <div class="order-detail-row">
+                <span>Location</span>
+
+                <strong>
+                    {{ "%.6f"|format(order.latitude) }},
+                    {{ "%.6f"|format(order.longitude) }}
+                </strong>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+    <!-- STATUS -->
+    <section class="admin-panel">
+
+        <div class="admin-panel-header">
+            <div>
+                <span class="admin-eyebrow">Management</span>
+                <h2>Order status</h2>
+            </div>
+        </div>
+
+        <div class="current-order-status">
+            <span class="order-status order-status-{{ order.status }}">
+                {{ order.status|capitalize }}
+            </span>
+        </div>
+
+        <form
+            method="POST"
+            action="{{ url_for('admin_update_order_status', order_id=order.id) }}"
+            class="order-status-form"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <label for="status">Change status</label>
+
+            <select name="status" id="status">
+
+                <option
+                    value="pending"
+                    {% if order.status == "pending" %}selected{% endif %}
+                >
+                    Pending
+                </option>
+
+                <option
+                    value="confirmed"
+                    {% if order.status == "confirmed" %}selected{% endif %}
+                >
+                    Confirmed
+                </option>
+
+                <option
+                    value="delivered"
+                    {% if order.status == "delivered" %}selected{% endif %}
+                >
+                    Delivered
+                </option>
+
+                <option
+                    value="cancelled"
+                    {% if order.status == "cancelled" %}selected{% endif %}
+                >
+                    Cancelled
+                </option>
+
+            </select>
+
+            <button type="submit" class="admin-primary-button">
+                Update status
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <!-- ITEMS -->
+    <section class="admin-panel order-items-panel">
+
+        <div class="admin-panel-header">
+            <div>
+                <span class="admin-eyebrow">Purchase</span>
+                <h2>Order items</h2>
+            </div>
+        </div>
+
+        <div class="admin-table-wrapper">
+
+            <table class="admin-table">
+
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Unit price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in order.items %}
+
+                    <tr>
+
+                        <td>
+                            {% if item.product %}
+                                {{ item.product.name }}
+                            {% else %}
+                                Deleted product
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ "%.0f"|format(item.price) }} DA
+                        </td>
+
+                        <td>
+                            {{ item.quantity }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ "%.0f"|format(item.price * item.quantity) }} DA
+                            </strong>
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+                <tfoot>
+
+                    <tr class="order-total-row">
+                        <td colspan="3">
+                            <strong>Total</strong>
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ "%.0f"|format(order.total) }} DA
+                            </strong>
+                        </td>
+                    </tr>
+
+                </tfoot>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- PAYMENT -->
+    <section class="admin-panel">
+
+        <div class="admin-panel-header">
+            <div>
+                <span class="admin-eyebrow">Payment</span>
+                <h2>Payment information</h2>
+            </div>
+        </div>
+
+        <div class="order-detail-info">
+
+            <div class="order-detail-row">
+                <span>Method</span>
+                <strong>
+                    Cash on delivery
+                </strong>
+            </div>
+
+            <div class="order-detail-row">
+                <span>Subtotal</span>
+                <strong>
+                    {{ "%.0f"|format(order.total - order.delivery_fee) }} DA
+                </strong>
+            </div>
+
+            <div class="order-detail-row">
+                <span>
+                    Delivery
+                    {% if order.wilaya_name %}({{ order.wilaya_name }}){% endif %}
+                </span>
+                <strong>
+                    {% if order.delivery_fee > 0 %}
+                        {{ "%.0f"|format(order.delivery_fee) }} DA
+                    {% else %}
+                        Free
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="order-detail-row">
+                <span>Total</span>
+                <strong>
+                    {{ "%.0f"|format(order.total) }} DA
+                </strong>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

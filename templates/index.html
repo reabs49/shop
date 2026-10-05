@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>My Shop</title>
+
+    <meta
+        name="description"
+        content="{{ shop_settings.shop_description or (shop_settings.shop_name ~ ' — everyday goods, chosen with care, delivered to your door.') }}"
+    >
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ shop_settings.shop_name }}">
+    <meta
+        property="og:description"
+        content="{{ shop_settings.shop_description or (shop_settings.shop_name ~ ' — everyday goods, chosen with care, delivered to your door.') }}"
+    >
+    <meta property="og:url" content="{{ request.url }}">
+
+    {% if hero_products and hero_products[0].images %}
+        <meta
+            property="og:image"
+            content="{{ url_for(
+                'static',
+                filename='images/products/' ~ hero_products[0].images[0].filename,
+                _external=True
+            ) }}"
+        >
+    {% endif %}
+
+    <meta name="twitter:card" content="summary_large_image">
+
+
+    <!-- Shared styles -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/base.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- ==========================================
+         SALE BANNER
+         ========================================== -->
+
+    {% if active_offers_count > 0 %}
+
+        <a
+            href="{{ url_for('home', sale=1) }}#products"
+            class="sale-banner"
+        >
+
+            <span class="sale-banner-tag">
+                Solde
+            </span>
+
+            <span>
+                {{ active_offers_count }}
+                product{% if active_offers_count != 1 %}s{% endif %}
+                on sale right now — shop the offers
+            </span>
+
+            <span class="sale-banner-arrow">
+                →
+            </span>
+
+        </a>
+
+    {% endif %}
+
+
+    <!-- ==========================================
+         NAVIGATION
+         ========================================== -->
+
+    <header class="navbar">
+
+        <div class="container">
+
+            <a
+                href="{{ url_for('home') }}"
+                class="logo"
+            >
+                My Shop
+            </a>
+
+
+            <nav>
+
+                <a href="{{ url_for('home') }}">
+                    Home
+                </a>
+
+                <a href="#products">
+                    Products
+                </a>
+
+                <a href="#about">
+                    About
+                </a>
+
+                <a href="{{ url_for('view_cart') }}" class="cart-link">
+                    Cart
+                    {% if cart_count > 0 %}
+                        <span class="cart-badge">{{ cart_count }}</span>
+                    {% endif %}
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ==========================================
+         MAIN CONTENT
+         ========================================== -->
+
+    <main>
+
+
+        <!-- ========================================
+             HERO
+             ======================================== -->
+
+        <section class="hero">
+
+            <div class="container hero-grid">
+
+                <div class="hero-text">
+
+                    <span class="shop-stamp">
+                        {{ shop_settings.shop_name }}
+                    </span>
+
+                    <h1>
+                        Everyday goods,
+                        <br>
+                        chosen with care.
+                    </h1>
+
+
+                    <p>
+                        {% if shop_settings.shop_description %}
+
+                            {{ shop_settings.shop_description }}
+
+                        {% else %}
+
+                            A small selection of products we use and trust
+                            ourselves, ordered in a few taps and delivered
+                            to your door.
+
+                        {% endif %}
+                    </p>
+
+
+                    <div class="hero-actions">
+
+                        <a
+                            href="#products"
+                            class="hero-button"
+                        >
+                            Browse the shop
+                        </a>
+
+                        {% if active_offers_count > 0 %}
+
+                            <a
+                                href="{{ url_for('home', sale=1) }}#products"
+                                class="hero-button-secondary"
+                            >
+                                View offers
+                            </a>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <ul class="hero-receipt">
+
+                        <li>
+                            <span>Catalog</span>
+                            <strong>
+                                {{ total_products_count }}
+                                product{% if total_products_count != 1 %}s{% endif %}
+                            </strong>
+                        </li>
+
+                        <li>
+                            <span>Delivery</span>
+                            <strong>
+                                {% if shop_settings.delivery_enabled %}
+                                    To your door
+                                {% else %}
+                                    Currently paused
+                                {% endif %}
+                            </strong>
+                        </li>
+
+                        <li>
+                            <span>Payment</span>
+                            <strong>
+                                Cash on delivery
+                            </strong>
+                        </li>
+
+                    </ul>
+
+                </div>
+
+
+                <div class="hero-visual">
+
+                    {% if hero_products %}
+
+                        {% set featured = hero_products[0] %}
+
+                        <a
+                            href="{{ url_for(
+                                'product_detail',
+                                product_id=featured.id
+                            ) }}"
+                            class="hero-feature-card"
+                        >
+
+                            <img
+                                src="{{ url_for(
+                                    'static',
+                                    filename='images/products/' ~
+                                    featured.images[0].filename
+                                ) }}"
+                                alt="{{ featured.name }}"
+                            >
+
+                            {% if featured.offer_active %}
+
+                                <span class="ink-stamp">
+                                    Solde
+                                    <em>
+                                        -{{ (
+                                            (featured.regular_price - featured.price)
+                                            / featured.regular_price
+                                            * 100
+                                        ) | round | int }}%
+                                    </em>
+                                </span>
+
+                            {% endif %}
+
+                            <span class="price-tag">
+
+                                <span class="price-tag-name">
+                                    {{ featured.name }}
+                                </span>
+
+                                <span class="price-tag-amount">
+                                    {{ "%.0f"|format(featured.price) }} DA
+                                </span>
+
+                            </span>
+
+                        </a>
+
+                    {% else %}
+
+                        <div class="hero-visual-placeholder">
+                            <span>My Shop</span>
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ========================================
+             PRODUCTS
+             ======================================== -->
+
+        <section
+            id="products"
+            class="products"
+        >
+
+            <div class="container">
+
+                <div class="products-heading">
+
+                    <h2>
+                        Our products
+                    </h2>
+
+                    <span class="products-count">
+                        {{ total_matching }}
+                        item{% if total_matching != 1 %}s{% endif %}
+                    </span>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- SEARCH + CATEGORY -->
+                <!-- ================================================= -->
+
+                <form
+                    method="GET"
+                    action="{{ url_for('home') }}#products"
+                    id="search-form"
+                    class="shop-toolbar"
+                >
+
+                    <div class="shop-search-wrap">
+
+                        <label for="search-input">
+                            Search
+                        </label>
+
+                        <input
+                            type="search"
+                            name="q"
+                            id="search-input"
+                            value="{{ search_query }}"
+                            placeholder="What are you looking for?"
+                            class="shop-search-input"
+                            {% if search_query %}autofocus{% endif %}
+                        >
+
+                        <button
+                            type="submit"
+                            class="shop-search-submit"
+                            aria-label="Search"
+                        >
+                            →
+                        </button>
+
+                    </div>
+
+
+                    {% if selected_category %}
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                    {% endif %}
+
+                    {% if sale_only %}
+                        <input type="hidden" name="sale" value="1">
+                    {% endif %}
+
+
+                    <div
+                        class="shop-category-chips"
+                        role="group"
+                        aria-label="Filter by category"
+                    >
+
+                        <a
+                            href="{{ url_for(
+                                'home',
+                                q=search_query or None,
+                                sale=1 if sale_only else None
+                            ) }}#products"
+                            class="category-chip {% if not selected_category %}active{% endif %}"
+                            data-category=""
+                        >
+                            All
+                        </a>
+
+                        {% for category in categories %}
+
+                            <a
+                                href="{{ url_for(
+                                    'home',
+                                    q=search_query or None,
+                                    category=category,
+                                    sale=1 if sale_only else None
+                                ) }}#products"
+                                class="category-chip {% if selected_category == category %}active{% endif %}"
+                                data-category="{{ category }}"
+                            >
+                                {{ category }}
+                            </a>
+
+                        {% endfor %}
+
+                        <a
+                            href="{{ url_for(
+                                'home',
+                                q=search_query or None,
+                                category=selected_category or None,
+                                sale=None if sale_only else 1
+                            ) }}#products"
+                            class="category-chip category-chip-sale {% if sale_only %}active{% endif %}"
+                        >
+                            Solde only
+                        </a>
+
+                        {% if search_query or selected_category or sale_only %}
+
+                            <a
+                                href="{{ url_for('home') }}#products"
+                                class="shop-toolbar-clear"
+                            >
+                                Clear filters
+                            </a>
+
+                        {% endif %}
+
+                    </div>
+
+                </form>
+
+
+                {% if products %}
+
+                    <div class="product-grid">
+
+                        {% for product in products %}
+
+                            <!--
+                                The entire card is clickable.
+                                It leads to the full product page.
+                            -->
+
+                            <a
+                                href="{{ url_for(
+                                    'product_detail',
+                                    product_id=product.id
+                                ) }}"
+                                class="product-card {% if product.offer_active %}on-sale{% endif %}"
+                            >
+
+
+                                <!-- PRODUCT IMAGE -->
+
+                                <div class="product-image">
+
+                                    {% if product.offer_active %}
+
+                                        <span class="ink-stamp ink-stamp-small">
+                                            Solde
+                                            <em>
+                                                -{{ (
+                                                    (product.regular_price - product.price)
+                                                    / product.regular_price
+                                                    * 100
+                                                ) | round | int }}%
+                                            </em>
+                                        </span>
+
+                                    {% endif %}
+
+                                    {% if product.images %}
+
+                                        <img
+                                            src="{{ url_for(
+                                                'static',
+                                                filename='images/products/' ~
+                                                product.images[0].filename
+                                            ) }}"
+                                            alt="{{ product.name }}"
+                                        >
+
+                                    {% else %}
+
+                                        <span>
+                                            No image yet
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <!-- PRODUCT INFORMATION -->
+
+                                <div class="product-info">
+
+                                    {% if product.category %}
+
+                                        <span class="product-category-tag">
+                                            {{ product.category }}
+                                        </span>
+
+                                    {% endif %}
+
+
+                                    <h3>
+                                        {{ product.name }}
+                                    </h3>
+
+
+                                    {% if product.description %}
+
+                                        <p class="description">
+                                            {{ product.description }}
+                                        </p>
+
+                                    {% endif %}
+
+
+                                    {% if product.offer_active %}
+
+                                        <p class="price sale-price">
+
+                                            <s class="regular-price">
+                                                {{ "%.0f"|format(product.regular_price) }} DA
+                                            </s>
+
+                                            <span class="discounted-price">
+                                                {{ "%.0f"|format(product.price) }} DA
+                                            </span>
+
+                                        </p>
+
+                                    {% else %}
+
+                                        <p class="price">
+                                            {{ "%.0f"|format(product.price) }} DA
+                                        </p>
+
+                                    {% endif %}
+
+
+                                    {% if not product.is_sold and 0 < product.stock <= shop_settings.low_stock_threshold %}
+
+                                        <span class="stock-badge">
+                                            Only {{ product.stock }} left
+                                        </span>
+
+                                    {% endif %}
+
+
+
+                                    <!-- PRODUCT STATUS -->
+
+                                    {% if product.is_sold %}
+
+                                        <button
+                                            type="button"
+                                            disabled
+                                            class="product-status-button"
+                                        >
+                                            Sold
+                                        </button>
+
+
+                                    {% elif product.stock > 0 %}
+
+                                        <span class="buy-button">
+                                            View product
+                                        </span>
+
+
+                                    {% else %}
+
+                                        <button
+                                            type="button"
+                                            disabled
+                                            class="product-status-button"
+                                        >
+                                            Out of stock
+                                        </button>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </a>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    {% if total_pages > 1 %}
+
+                        <nav
+                            class="pagination"
+                            aria-label="Product pages"
+                        >
+
+                            {% if page > 1 %}
+
+                                <a
+                                    href="{{ url_for(
+                                        'home',
+                                        q=search_query or None,
+                                        category=selected_category or None,
+                                        sale=1 if sale_only else None,
+                                        page=page - 1
+                                    ) }}#products"
+                                    class="pagination-link"
+                                >
+                                    Previous
+                                </a>
+
+                            {% endif %}
+
+                            <span class="pagination-status">
+                                Page {{ page }} of {{ total_pages }}
+                            </span>
+
+                            {% if page < total_pages %}
+
+                                <a
+                                    href="{{ url_for(
+                                        'home',
+                                        q=search_query or None,
+                                        category=selected_category or None,
+                                        sale=1 if sale_only else None,
+                                        page=page + 1
+                                    ) }}#products"
+                                    class="pagination-link"
+                                >
+                                    Next
+                                </a>
+
+                            {% endif %}
+
+                        </nav>
+
+                    {% endif %}
+
+
+                {% else %}
+
+                    <!-- EMPTY STORE -->
+
+                    <div class="empty-state">
+
+                        {% if search_query or selected_category or sale_only %}
+
+                            <p>
+                                No products match your search.
+                            </p>
+
+                        {% else %}
+
+                            <p>
+                                No products yet — check back soon.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ========================================
+             ABOUT
+             ======================================== -->
+
+        <section
+            id="about"
+            class="about"
+        >
+
+            <div class="container">
+
+                <h2>
+                    About us
+                </h2>
+
+
+                <p>
+                    We're a small shop focused on doing a few
+                    things well: a tight selection, honest prices,
+                    and orders that show up when we say they will.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- ==========================================
+         FOOTER
+         ========================================== -->
+
+    <footer>
+
+        <div class="container">
+
+            <p>
+                © 2026 My Shop
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        /* =========================================================
+           LIVE SEARCH
+
+           The form still works as a normal GET submit (Enter key,
+           the Search button, no-JS fallback). With JS available,
+           typing auto-submits after a short pause so results feel
+           live without needing to press the button.
+           ========================================================= */
+
+        const searchForm = document.getElementById("search-form");
+        const searchInput = document.getElementById("search-input");
+
+        if (searchInput && searchInput.value) {
+            const end = searchInput.value.length;
+            searchInput.setSelectionRange(end, end);
+        }
+
+        if (searchForm && searchInput) {
+
+            let debounceTimer = null;
+
+            searchInput.addEventListener("input", function () {
+
+                clearTimeout(debounceTimer);
+
+                debounceTimer = setTimeout(function () {
+                    searchForm.requestSubmit
+                        ? searchForm.requestSubmit()
+                        : searchForm.submit();
+                }, 450);
+
+            });
+
+        }
+
+    });
+
+    </script>
+
+</body>
+
+</html>

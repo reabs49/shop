@@ -1,0 +1,93 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+
+<div class="admin-page-header">
+    <div>
+        <span class="admin-eyebrow">Commerce</span>
+        <h1>Orders</h1>
+        <p>View and manage customer orders.</p>
+    </div>
+</div>
+
+<div class="admin-panel">
+
+    {% if orders %}
+
+    <div class="admin-table-wrapper">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for order in orders %}
+                <tr>
+
+                    <td>
+                        <strong>#{{ order.id }}</strong>
+                    </td>
+
+                    <td>
+                        {{ order.customer_name }}
+                    </td>
+
+                    <td>
+                        {{ order.phone }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            {{ "%.0f"|format(order.total) }} DA
+                        </strong>
+                    </td>
+
+                    <td>
+                        <span class="order-status order-status-{{ order.status }}">
+                            {{ order.status|capitalize }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ order.created_at.strftime("%Y-%m-%d %H:%M") }}
+                    </td>
+
+                    <td>
+                        <a
+                            href="{{ url_for('admin_order_detail', order_id=order.id) }}"
+                            class="admin-table-link"
+                        >
+                            View
+                        </a>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+
+    <div class="admin-empty-state">
+        <h3>No orders yet</h3>
+        <p>
+            Customer orders will appear here once someone places an order.
+        </p>
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

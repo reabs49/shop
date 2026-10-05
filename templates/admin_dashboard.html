@@ -1,0 +1,371 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="admin-page-header">
+
+    <div>
+
+        <span class="admin-eyebrow">
+            Overview
+        </span>
+
+        <h1>
+            Dashboard
+        </h1>
+
+        <p>
+            A quick view of what is happening in your shop.
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MAIN STATS
+     ========================================================= -->
+
+<div class="admin-stat-grid">
+
+    <div class="admin-stat-card">
+
+        <span class="admin-stat-label">
+            Products
+        </span>
+
+        <strong class="admin-stat-value">
+            {{ total_products }}
+        </strong>
+
+        <span class="admin-stat-note">
+            {{ total_stock }} items currently in stock
+        </span>
+
+    </div>
+
+
+    <div class="admin-stat-card">
+
+        <span class="admin-stat-label">
+            Pending orders
+        </span>
+
+        <strong class="admin-stat-value">
+            {{ pending_orders }}
+        </strong>
+
+        <span class="admin-stat-note">
+            {{ total_orders }} total orders
+        </span>
+
+    </div>
+
+
+    <div class="admin-stat-card">
+
+        <span class="admin-stat-label">
+            Expected revenue
+        </span>
+
+        <strong class="admin-stat-value">
+            {{ "%.0f"|format(expected_revenue) }} DA
+        </strong>
+
+        <span class="admin-stat-note">
+            Pending + confirmed orders
+        </span>
+
+    </div>
+
+
+    <div class="admin-stat-card">
+
+        <span class="admin-stat-label">
+            Completed revenue
+        </span>
+
+        <strong class="admin-stat-value">
+            {{ "%.0f"|format(completed_revenue) }} DA
+        </strong>
+
+        <span class="admin-stat-note">
+            Delivered orders
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     TOP PRODUCTS + RECENT ORDERS
+     ========================================================= -->
+
+<div class="admin-dashboard-grid">
+
+
+    <!-- TOP 5 DEMANDED PRODUCTS -->
+
+    <section class="admin-panel">
+
+        <div class="admin-panel-header">
+
+            <div>
+
+                <span class="admin-eyebrow">
+                    Demand
+                </span>
+
+                <h2>
+                    Top 5 demanded products
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        {% if top_demanded_products %}
+
+            <div class="demanded-products-list">
+
+                {% for item in top_demanded_products %}
+
+                    <div class="demanded-product-row">
+
+                        <div class="demanded-product-rank">
+                            {{ loop.index }}
+                        </div>
+
+
+                        <div class="demanded-product-info">
+
+                            <strong>
+                                {{ item.product.name }}
+                            </strong>
+
+                            <span>
+                                {{ item.quantity }} unit{% if item.quantity != 1 %}s{% endif %} demanded
+                            </span>
+
+                        </div>
+
+
+                        <div class="demanded-product-stock">
+
+                            <span>
+                                Stock
+                            </span>
+
+                            <strong>
+                                {{ item.product.stock }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="admin-empty-state">
+
+                <h3>
+                    No demand data yet
+                </h3>
+
+                <p>
+                    Products will appear here once customers place orders.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- RECENT ORDERS -->
+
+    <section class="admin-panel">
+
+        <div class="admin-panel-header">
+
+            <div>
+
+                <span class="admin-eyebrow">
+                    Activity
+                </span>
+
+                <h2>
+                    Recent orders
+                </h2>
+
+            </div>
+
+            <a
+                href="{{ url_for('admin_orders') }}"
+                class="admin-table-link"
+            >
+                View all
+            </a>
+
+        </div>
+
+
+        {% if recent_orders %}
+
+            <div class="recent-orders-list">
+
+                {% for order in recent_orders %}
+
+                    <a
+                        href="{{ url_for(
+                            'admin_order_detail',
+                            order_id=order.id
+                        ) }}"
+                        class="recent-order-row"
+                    >
+
+                        <div class="recent-order-info">
+
+                            <strong>
+                                #{{ order.id }}
+                            </strong>
+
+                            <span>
+                                {{ order.customer_name }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="recent-order-meta">
+
+                            <strong>
+                                {{ "%.0f"|format(order.total) }} DA
+                            </strong>
+
+                            <span
+                                class="order-status order-status-{{ order.status }}"
+                            >
+                                {{ order.status|capitalize }}
+                            </span>
+
+                        </div>
+
+                    </a>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="admin-empty-state">
+
+                <h3>
+                    No orders yet
+                </h3>
+
+                <p>
+                    Customer orders will appear here.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+
+<!-- =========================================================
+     LOW STOCK
+     ========================================================= -->
+
+<section class="admin-panel">
+
+    <div class="admin-panel-header">
+
+        <div>
+
+            <span class="admin-eyebrow">
+                Inventory
+            </span>
+
+            <h2>
+                Low stock
+            </h2>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('admin_products') }}"
+            class="admin-table-link"
+        >
+            View products
+        </a>
+
+    </div>
+
+
+    {% if low_stock_products %}
+
+        <div class="low-stock-list">
+
+            {% for product in low_stock_products %}
+
+                <div class="low-stock-row">
+
+                    <div>
+
+                        <strong>
+                            {{ product.name }}
+                        </strong>
+
+                        <span>
+                            {{ product.stock }} remaining
+                        </span>
+
+                    </div>
+
+
+                    <div class="low-stock-number">
+                        {{ product.stock }}
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="admin-empty-state">
+
+            <h3>
+                Stock looks good
+            </h3>
+
+            <p>
+                No products are currently low on stock.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

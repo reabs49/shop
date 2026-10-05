@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}Admin — My Shop{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/base.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/admin.css') }}"
+    >
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+
+<body class="admin">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="sidebar-brand">
+                <span class="brand-name">My Shop</span>
+                <span class="brand-label">Management</span>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a
+                    href="{{ url_for('admin_dashboard') }}"
+                    class="sidebar-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}"
+                >
+                    <span>Dashboard</span>
+                </a>
+
+                <a
+                    href="{{ url_for('admin_products') }}"
+                    class="sidebar-link {% if request.endpoint in ['admin_products', 'admin_add_product', 'admin_edit_product'] %}active{% endif %}"
+                >
+                    <span>Products</span>
+                </a>
+
+                <a
+                    href="{{ url_for('admin_orders') }}"
+                    class="sidebar-link {% if request.endpoint in ['admin_orders', 'admin_order_detail'] %}active{% endif %}"
+                >
+                    <span>Orders</span>
+                </a>
+
+                <a
+                    href="{{ url_for('admin_settings') }}"
+                    class="sidebar-link {% if request.endpoint in ['admin_settings', 'admin_change_password'] %}active{% endif %}"
+                >
+                    <span>Settings</span>
+                </a>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+
+                <div class="admin-user">
+                    <span class="admin-user-label">
+                        Signed in as
+                    </span>
+
+                    <strong>
+                        {{ current_user.username }}
+                    </strong>
+                </div>
+
+                <a
+                    href="{{ url_for('admin_logout') }}"
+                    class="sidebar-logout"
+                >
+                    Sign out
+                </a>
+
+            </div>
+
+        </aside>
+
+        <main class="admin-content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    {% for category, message in messages %}
+
+                        <div class="flash flash-{{ category }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

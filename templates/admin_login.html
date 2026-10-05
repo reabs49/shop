@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Management — My Shop</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/base.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/admin.css') }}"
+    >
+</head>
+
+
+<body class="admin">
+
+    <main class="admin-login">
+
+        <!-- LEFT: BRAND / COMMERCE SIDE -->
+        <section class="login-showcase">
+
+            <div class="showcase-content">
+
+                <div class="showcase-brand">
+                    My Shop
+                </div>
+
+
+                <p class="showcase-label">
+                    Management portal
+                </p>
+
+
+                <h1>
+                    Everything your shop needs,
+                    <em>in one place.</em>
+                </h1>
+
+
+                <p class="showcase-text">
+                    Manage your products, keep track of stock,
+                    and stay on top of every order.
+                </p>
+
+
+                <!-- Decorative product composition -->
+                <div class="product-scene">
+
+                    <div class="product-card-large">
+                        <div class="product-placeholder">
+                            <span>Featured</span>
+                        </div>
+
+                        <div class="scene-product-info">
+                            <span>New collection</span>
+                            <strong>Thoughtfully chosen.</strong>
+                        </div>
+                    </div>
+
+
+                    <div class="product-card-small product-small-one">
+                        <div class="small-placeholder">
+                            Product
+                        </div>
+                    </div>
+
+
+                    <div class="product-card-small product-small-two">
+                        <div class="small-placeholder">
+                            Product
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="showcase-footer">
+                    <span>Simple.</span>
+                    <span>Thoughtful.</span>
+                    <span>Organized.</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- RIGHT: LOGIN -->
+        <section class="login-panel">
+
+            <div class="login-container">
+
+                <div class="login-heading">
+
+                    <span class="login-eyebrow">
+                        Private area
+                    </span>
+
+                    <h2>
+                        Welcome back
+                    </h2>
+
+                    <p>
+                        Sign in to continue managing your shop.
+                    </p>
+
+                </div>
+
+
+                <form
+    method="POST"
+    class="login-form"
+>
+
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="field">
+
+        <label for="username">
+            Username
+        </label>
+
+        <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            placeholder="Enter your username"
+            required
+        >
+
+    </div>
+
+
+    <div class="field">
+
+        <label for="password">
+            Password
+        </label>
+
+        <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            required
+        >
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="btn btn-primary login-button"
+    >
+        Sign in
+    </button>
+
+</form>
+
+                <div class="login-security">
+
+                    <span class="security-mark">
+                        ●
+                    </span>
+
+                    <span>
+                        Authorized personnel only
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

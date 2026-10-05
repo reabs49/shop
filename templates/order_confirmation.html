@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Order Confirmed - My Shop
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/base.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<header class="navbar">
+
+    <div class="container">
+
+        <a
+            href="/"
+            class="logo"
+        >
+            My Shop
+        </a>
+
+        <nav>
+
+            <a href="/">
+                Home
+            </a>
+
+            <a href="/#products">
+                Products
+            </a>
+
+            <a href="/#about">
+                About
+            </a>
+
+            <a href="{{ url_for('view_cart') }}" class="cart-link">
+                Cart
+                {% if cart_count > 0 %}
+                    <span class="cart-badge">{{ cart_count }}</span>
+                {% endif %}
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<main>
+
+<section class="order-confirmation">
+
+    <div class="container">
+
+        <div class="order-confirmation-card">
+
+
+            <!-- ================================================= -->
+            <!-- SUCCESS -->
+            <!-- ================================================= -->
+
+            <div class="confirmation-success">
+
+                <div class="confirmation-icon">
+                    ✓
+                </div>
+
+                <span class="product-detail-label">
+                    Order received
+                </span>
+
+                <h1>
+                    Thank you, {{ order.customer_name }}
+                </h1>
+
+                <p>
+                    Your order has been successfully placed.
+                </p>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- ORDER NUMBER -->
+            <!-- ================================================= -->
+
+            <div class="confirmation-order-number">
+
+                <span>
+                    Order number
+                </span>
+
+                <strong>
+                    #{{ order.id }}
+                </strong>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- ORDER ITEMS -->
+            <!-- ================================================= -->
+
+            <div class="confirmation-section">
+
+                <h2>
+                    Your order
+                </h2>
+
+
+                {% for item in order.items %}
+
+                <div class="confirmation-item">
+
+                    <div>
+
+                        <strong>
+                            {{ item.product.name }}
+                        </strong>
+
+                        <span>
+                            {{ item.quantity }} ×
+                            {{ "%.0f"|format(item.price) }} DA
+                        </span>
+
+                    </div>
+
+
+                    <strong>
+                        {{ "%.0f"|format(
+                            item.price * item.quantity
+                        ) }} DA
+                    </strong>
+
+                </div>
+
+                {% endfor %}
+
+
+                {% set order_subtotal = order.total - order.delivery_fee %}
+
+                <div class="confirmation-detail">
+
+                    <span>
+                        Subtotal
+                    </span>
+
+                    <strong>
+                        {{ "%.0f"|format(order_subtotal) }} DA
+                    </strong>
+
+                </div>
+
+
+                <div class="confirmation-detail">
+
+                    <span>
+                        Delivery
+                        {% if order.wilaya_name %}
+                            ({{ order.wilaya_name }})
+                        {% endif %}
+                    </span>
+
+                    <strong>
+                        {% if order.delivery_fee > 0 %}
+                            {{ "%.0f"|format(order.delivery_fee) }} DA
+                        {% else %}
+                            Free
+                        {% endif %}
+                    </strong>
+
+                </div>
+
+
+                <div class="confirmation-total">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong>
+                        {{ "%.0f"|format(order.total) }} DA
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- CUSTOMER DETAILS -->
+            <!-- ================================================= -->
+
+            <div class="confirmation-section">
+
+                <h2>
+                    Delivery details
+                </h2>
+
+
+                <div class="confirmation-detail">
+
+                    <span>
+                        Name
+                    </span>
+
+                    <strong>
+                        {{ order.customer_name }}
+                    </strong>
+
+                </div>
+
+
+                <div class="confirmation-detail">
+
+                    <span>
+                        Phone
+                    </span>
+
+                    <strong>
+                        {{ order.phone }}
+                    </strong>
+
+                </div>
+
+
+                {% if order.wilaya_name %}
+
+                <div class="confirmation-detail">
+
+                    <span>
+                        Province
+                    </span>
+
+                    <strong>
+                        {{ order.wilaya_name }}
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if order.address %}
+
+                <div class="confirmation-detail">
+
+                    <span>
+                        Delivery address
+                    </span>
+
+                    <strong>
+                        {{ order.address }}
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if order.latitude is not none
+                      and order.longitude is not none %}
+
+                <div class="confirmation-detail">
+
+                    <span>
+                        Delivery location
+                    </span>
+
+                    <strong>
+                        Location saved
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- PAYMENT -->
+            <!-- ================================================= -->
+
+            <div class="confirmation-payment">
+
+                <strong>
+                    Payment
+                </strong>
+
+                <span>
+                    Cash on delivery
+                </span>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- ACTION -->
+            <!-- ================================================= -->
+
+            <div class="confirmation-actions">
+
+                <a
+                    href="{{ url_for('order_invoice', token=order.public_token) }}"
+                    class="btn-secondary-large"
+                >
+                    Download bill
+                </a>
+
+                <a
+                    href="/"
+                    class="buy-button-large"
+                >
+                    Continue shopping
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<footer>
+
+    <div class="container">
+
+        <p>
+            © 2026 My Shop
+        </p>
+
+    </div>
+
+</footer>
+
+</body>
+
+</html>

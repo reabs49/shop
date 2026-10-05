@@ -1,0 +1,160 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+    Delivery fees — My Shop
+{% endblock %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/settings.css') }}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-page-header">
+    <div>
+        <span class="admin-eyebrow">Configuration</span>
+        <h1>Delivery fees by province</h1>
+        <p>
+            Set how much delivery costs for each wilaya. Customers
+            see this fee at checkout once they pick their province.
+        </p>
+    </div>
+
+    <a
+        href="{{ url_for('admin_settings') }}"
+        class="admin-secondary-button"
+    >
+        ← Back to settings
+    </a>
+</div>
+
+
+<form
+    method="POST"
+    action="{{ url_for('admin_delivery_fees') }}"
+    class="form-section delivery-fees-form"
+>
+
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="delivery-fees-bulk">
+
+        <label for="bulk-fee">
+            Apply one fee to every province
+        </label>
+
+        <div class="input-with-suffix delivery-fees-bulk-input">
+
+            <input
+                type="number"
+                id="bulk-fee"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 500"
+            >
+
+            <span>DA</span>
+
+        </div>
+
+        <button
+            type="button"
+            id="apply-bulk-fee"
+            class="admin-secondary-button"
+        >
+            Apply to all
+        </button>
+
+        <p class="form-hint">
+            Fills in every field below — you can still fine-tune
+            individual provinces afterward, and nothing saves
+            until you click "Save fees".
+        </p>
+
+    </div>
+
+
+    <div class="delivery-fees-grid">
+
+        {% for row in wilaya_fees %}
+
+            <div class="delivery-fee-field">
+
+                <label for="fee_{{ row.wilaya_code }}">
+                    {{ "%02d"|format(row.wilaya_code) }} — {{ row.wilaya_name }}
+                </label>
+
+                <div class="input-with-suffix">
+
+                    <input
+                        type="number"
+                        id="fee_{{ row.wilaya_code }}"
+                        name="fee_{{ row.wilaya_code }}"
+                        class="wilaya-fee-input"
+                        min="0"
+                        step="0.01"
+                        value="{{ row.fee }}"
+                        required
+                    >
+
+                    <span>DA</span>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="form-actions">
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Save fees
+        </button>
+
+    </div>
+
+</form>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const bulkInput = document.getElementById("bulk-fee");
+    const applyButton = document.getElementById("apply-bulk-fee");
+    const feeInputs = document.querySelectorAll(".wilaya-fee-input");
+
+    if (applyButton && bulkInput) {
+
+        applyButton.addEventListener("click", function () {
+
+            if (bulkInput.value === "") {
+                return;
+            }
+
+            feeInputs.forEach(function (input) {
+                input.value = bulkInput.value;
+            });
+
+        });
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends "admin_base.html" %}
+
+
+{% block title %}
+    Add Product — My Shop
+{% endblock %}
+
+
+{% block content %}
+
+<header class="products-header">
+
+    <div>
+
+        <h1>
+            Add product
+        </h1>
+
+        <p>
+            Add a new product to your shop catalog.
+        </p>
+
+    </div>
+
+</header>
+
+
+<div class="product-form-page">
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="product-form"
+    >
+
+        <!-- CSRF -->
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <!-- =========================================
+             BASIC INFORMATION
+             ========================================= -->
+
+        <section class="form-section">
+
+            <div class="form-section-heading">
+
+                <h2>
+                    Product information
+                </h2>
+
+                <p>
+                    Basic information customers will see.
+                </p>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="name">
+                    Product name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    maxlength="150"
+                    placeholder="e.g. Classic cotton shirt"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="category">
+                    Category
+                </label>
+
+                <select
+                    id="category"
+                    name="category"
+                >
+
+                    <option value="">
+                        No category
+                    </option>
+
+                    {% for category in categories %}
+
+                        <option value="{{ category }}">
+                            {{ category }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="description">
+                    Description
+                </label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="6"
+                    maxlength="5000"
+                    placeholder="Describe the product..."
+                ></textarea>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             PRICE / STOCK
+             ========================================= -->
+
+        <section class="form-section">
+
+            <div class="form-section-heading">
+
+                <h2>
+                    Price & inventory
+                </h2>
+
+                <p>
+                    Control pricing and availability.
+                </p>
+
+            </div>
+
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label for="price">
+                        Price
+                    </label>
+
+                    <div class="input-with-suffix">
+
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            min="0"
+                            step="0.01"
+                            placeholder="0"
+                            required
+                        >
+
+                        <span>
+                            DA
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="stock">
+                        Stock quantity
+                    </label>
+
+                    <input
+                        type="number"
+                        id="stock"
+                        name="stock"
+                        min="0"
+                        step="1"
+                        placeholder="0"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+            <p class="form-hint">
+                Once the product exists, you can put it on
+                promotion (solde) from the edit page.
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             IMAGES
+             ========================================= -->
+
+        <section class="form-section">
+
+            <div class="form-section-heading">
+
+                <h2>
+                    Product images
+                </h2>
+
+                <p>
+                    Upload up to 8 JPG, PNG or WebP images.
+                </p>
+
+            </div>
+
+
+            <label
+                for="images"
+                class="image-upload"
+            >
+
+                <span class="upload-icon">
+                    +
+                </span>
+
+                <strong>
+                    Choose product images
+                </strong>
+
+                <small>
+                    You can select multiple images at once.
+                </small>
+
+            </label>
+
+
+            <input
+                type="file"
+                id="images"
+                name="images"
+                accept=".jpg,.jpeg,.png,.webp"
+                multiple
+                hidden
+            >
+
+        </section>
+
+
+        <!-- =========================================
+             ACTIONS
+             ========================================= -->
+
+        <div class="form-actions product-form-actions">
+
+            <a
+                href="{{ url_for('admin_products') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Create product
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

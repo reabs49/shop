@@ -1,0 +1,720 @@
+{% extends "admin_base.html" %}
+
+
+{% block title %}
+    Edit {{ product.name }} — My Shop
+{% endblock %}
+
+
+{% block content %}
+
+{#
+    `values` is passed by the route. On a failed submit it holds
+    what the admin typed, so nothing is lost. The fallback keeps
+    the page working if the template is rendered without it.
+#}
+{% set values = values if values is defined and values else {
+    "name": product.name,
+    "category": product.category or "",
+    "description": product.description or "",
+    "price": product.regular_price,
+    "stock": product.stock,
+    "offer_active": product.offer_active,
+    "discount_type": "percentage",
+    "discount_value": "",
+    "offer_duration_days": shop_settings.default_offer_duration_days
+} %}
+
+
+<div class="product-form-page">
+
+    <header class="admin-page-header">
+
+        <div>
+
+            <span class="admin-eyebrow">
+                Catalog
+            </span>
+
+            <h1>
+                Edit product
+            </h1>
+
+            <p>
+                Update product information, stock and images.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('admin_products') }}"
+            class="admin-secondary-button"
+        >
+            ← Back to products
+        </a>
+
+    </header>
+
+
+    <form
+        id="product-form"
+        method="POST"
+        action="{{ url_for(
+            'admin_edit_product',
+            product_id=product.id
+        ) }}"
+        enctype="multipart/form-data"
+        class="product-form"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <!-- ==================================================
+             BASIC INFORMATION
+             ================================================== -->
+
+        <section class="form-section">
+
+            <div class="form-section-heading">
+
+                <h2>
+                    Product information
+                </h2>
+
+                <p>
+                    Update the information customers see.
+                </p>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="name">
+                    Product name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    maxlength="150"
+                    value="{{ values.name }}"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="category">
+                    Category
+                </label>
+
+                <select
+                    id="category"
+                    name="category"
+                >
+
+                    <option
+                        value=""
+                        {% if not values.category %}selected{% endif %}
+                    >
+                        No category
+                    </option>
+
+                    {% for category in categories %}
+
+                        <option
+                            value="{{ category }}"
+                            {% if values.category == category %}selected{% endif %}
+                        >
+                            {{ category }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="description">
+                    Description
+                </label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    maxlength="5000"
+                    rows="7"
+                    placeholder="Describe the product..."
+                >{{ values.description }}</textarea>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             PRICE & STOCK
+             ================================================== -->
+
+        <section class="form-section">
+
+            <div class="form-section-heading">
+
+                <h2>
+                    Price & inventory
+                </h2>
+
+                <p>
+                    This is the product's regular price. When a
+                    promotion is active below, customers see the
+                    discounted price instead.
+                </p>
+
+            </div>
+
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label for="price">
+                        Regular price
+                    </label>
+
+                    <div class="input-with-suffix">
+
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            min="0"
+                            step="0.01"
+                            value="{{ values.price }}"
+                            required
+                        >
+
+                        <span>
+                            DA
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="stock">
+                        Stock
+                    </label>
+
+                    <input
+                        type="number"
+                        id="stock"
+                        name="stock"
+                        min="0"
+                        step="1"
+                        value="{{ values.stock }}"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             PROMOTION (SOLDE)
+             ================================================== -->
+
+        <section class="form-section">
+
+            <div class="form-section-heading">
+
+                <h2>
+                    Promotion (solde)
+                </h2>
+
+                <p>
+                    Put this product on a limited-time offer. The
+                    discount and duration are entirely up to you —
+                    nothing here is fixed.
+                </p>
+
+            </div>
+
+
+            {% if product.offer_active %}
+
+                <div class="offer-status-banner">
+
+                    <strong>
+                        Promotion currently active
+                    </strong>
+
+                    <span>
+                        Selling at {{ "%.0f"|format(product.price) }} DA
+                        (instead of {{ "%.0f"|format(product.regular_price) }} DA)
+                        until
+                        {{ product.offer_ends_at.strftime("%Y-%m-%d at %H:%M") }}.
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+
+            <label
+                for="offer_active"
+                class="checkbox-field promo-toggle"
+            >
+
+                <input
+                    type="checkbox"
+                    id="offer_active"
+                    name="offer_active"
+                    {% if values.offer_active %}checked{% endif %}
+                >
+
+                <span>
+
+                    <strong>
+                        Activate promotion for this product
+                    </strong>
+
+                    <small>
+                        Uncheck to end an active promotion and
+                        return to the regular price.
+                    </small>
+
+                </span>
+
+            </label>
+
+
+            <div class="promo-fields">
+
+                <div class="form-grid">
+
+                    <div class="field">
+
+                        <label for="discount_type">
+                            Discount type
+                        </label>
+
+                        <select
+                            id="discount_type"
+                            name="discount_type"
+                        >
+
+                            <option
+                                value="percentage"
+                                {% if values.discount_type == "percentage" %}selected{% endif %}
+                            >
+                                Percentage off
+                            </option>
+
+                            <option
+                                value="fixed_price"
+                                {% if values.discount_type == "fixed_price" %}selected{% endif %}
+                            >
+                                Set the sale price directly
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="discount_value">
+                            Discount value
+                        </label>
+
+                        <div class="input-with-suffix">
+
+                            <input
+                                type="number"
+                                id="discount_value"
+                                name="discount_value"
+                                min="0"
+                                step="0.01"
+                                value="{{ values.discount_value }}"
+                                placeholder="e.g. 20"
+                            >
+
+                            <span id="discount-value-suffix">
+                                %
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="offer_duration_days">
+                        Promotion duration
+                    </label>
+
+                    <div class="input-with-suffix">
+
+                        <input
+                            type="number"
+                            id="offer_duration_days"
+                            name="offer_duration_days"
+                            min="1"
+                            max="365"
+                            step="1"
+                            value="{{ values.offer_duration_days }}"
+                        >
+
+                        <span>
+                            days
+                        </span>
+
+                    </div>
+
+                    <small class="field-hint">
+                        Defaults to the shop-wide setting
+                        ({{ shop_settings.default_offer_duration_days }} days)
+                        when left blank. Activating the promotion
+                        again restarts the countdown from today.
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             CURRENT IMAGES
+             ================================================== -->
+
+        <section class="form-section">
+
+            <div class="form-section-heading">
+
+                <h2>
+                    Product images
+                </h2>
+
+                <p>
+                    {{ product.images|length }} / 8 images currently uploaded.
+                </p>
+
+            </div>
+
+
+            {% if product.images %}
+
+                <div class="edit-images-grid">
+
+                    {% for image in product.images %}
+
+                    <div class="edit-image-card">
+
+                        <img
+                            src="{{ url_for(
+                                'static',
+                                filename='images/products/' ~ image.filename
+                            ) }}"
+                            alt="{{ product.name }} image {{ loop.index }}"
+                        >
+
+
+                        <div class="edit-image-actions">
+
+                            <span>
+                                Image {{ loop.index }}
+                            </span>
+
+
+                            {#
+                                A <form> cannot be nested inside another
+                                <form>. The delete forms live at the bottom
+                                of the page and are linked to these buttons
+                                through the `form` attribute, so deleting an
+                                image no longer submits the edit form.
+                            #}
+                            <button
+                                type="submit"
+                                form="delete-image-{{ image.id }}"
+                                class="image-delete-button"
+                            >
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="no-images-message">
+
+                    <p>
+                        This product has no images yet.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- ==================================================
+                 ADD IMAGES
+                 ================================================== -->
+
+            {% if product.images|length < 8 %}
+
+                <label
+                    for="images"
+                    class="image-upload"
+                >
+
+                    <span class="upload-icon">
+                        +
+                    </span>
+
+                    <strong>
+                        Add more images
+                    </strong>
+
+                    <small>
+                        JPG, JPEG, PNG or WEBP ·
+                        Maximum 8 images total
+                    </small>
+
+                </label>
+
+
+                <input
+                    type="file"
+                    id="images"
+                    name="images"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    multiple
+                    hidden
+                >
+
+                <p
+                    id="selected-images"
+                    class="selected-images"
+                ></p>
+
+            {% else %}
+
+                <div class="image-limit-message">
+
+                    <strong>
+                        Image limit reached
+                    </strong>
+
+                    <span>
+                        Delete an existing image before adding another one.
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- ==================================================
+             ACTIONS
+             ================================================== -->
+
+        <div class="form-actions product-form-actions">
+
+            <a
+                href="{{ url_for('admin_products') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Save changes
+            </button>
+
+        </div>
+
+    </form>
+
+
+    <!-- ======================================================
+         IMAGE DELETE FORMS
+
+         Kept outside the main form on purpose (see above).
+         ====================================================== -->
+
+    {% for image in product.images %}
+
+        <form
+            id="delete-image-{{ image.id }}"
+            method="POST"
+            action="{{ url_for(
+                'admin_delete_product_image',
+                product_id=product.id,
+                image_id=image.id
+            ) }}"
+            onsubmit="return confirm('Delete this image?');"
+            hidden
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+        </form>
+
+    {% endfor %}
+
+</div>
+
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        /* =========================================================
+           PROMOTION (SOLDE) FIELDS
+           ========================================================= */
+
+        const offerToggle =
+            document.getElementById("offer_active");
+
+        const promoFields =
+            document.querySelector(".promo-fields");
+
+        const discountType =
+            document.getElementById("discount_type");
+
+        const discountSuffix =
+            document.getElementById("discount-value-suffix");
+
+        function updatePromoVisibility() {
+
+            if (!offerToggle || !promoFields) {
+                return;
+            }
+
+            promoFields.style.display =
+                offerToggle.checked ? "block" : "none";
+
+        }
+
+        function updateDiscountSuffix() {
+
+            if (!discountType || !discountSuffix) {
+                return;
+            }
+
+            discountSuffix.textContent =
+                discountType.value === "fixed_price"
+                    ? "DA"
+                    : "%";
+
+        }
+
+        if (offerToggle) {
+
+            offerToggle.addEventListener(
+                "change",
+                updatePromoVisibility
+            );
+
+            updatePromoVisibility();
+
+        }
+
+        if (discountType) {
+
+            discountType.addEventListener(
+                "change",
+                updateDiscountSuffix
+            );
+
+            updateDiscountSuffix();
+
+        }
+
+
+        const imagesInput =
+            document.getElementById("images");
+
+        const selectedImages =
+            document.getElementById("selected-images");
+
+        if (!imagesInput || !selectedImages) {
+            return;
+        }
+
+
+        imagesInput.addEventListener(
+            "change",
+            function () {
+
+                const files =
+                    Array.from(
+                        imagesInput.files
+                    );
+
+
+                if (files.length === 0) {
+
+                    selectedImages.textContent = "";
+
+                    return;
+                }
+
+
+                selectedImages.textContent =
+                    files.length === 1
+                        ? "1 new image selected."
+                        : `${files.length} new images selected.`;
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+{% endblock %}

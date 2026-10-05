@@ -1,0 +1,6 @@
+envshop/
+__pycache__/
+.env
+instance/
+.vscode/
+*.pyc

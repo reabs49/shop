@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {{ product.name }} - My Shop
+    </title>
+
+    <meta
+        name="description"
+        content="{{ (product.description or (product.name ~ ' — available now at ' ~ shop_settings.shop_name)) | truncate(160) }}"
+    >
+
+    <meta property="og:type" content="product">
+    <meta property="og:title" content="{{ product.name }} - {{ shop_settings.shop_name }}">
+    <meta
+        property="og:description"
+        content="{{ (product.description or '') | truncate(160) }}"
+    >
+    <meta property="og:url" content="{{ request.url }}">
+
+    {% if product.images %}
+        <meta
+            property="og:image"
+            content="{{ url_for(
+                'static',
+                filename='images/products/' ~ product.images[0].filename,
+                _external=True
+            ) }}"
+        >
+    {% endif %}
+
+    <meta property="product:price:amount" content="{{ product.price }}">
+    <meta property="product:price:currency" content="DZD">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/base.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="container">
+
+        <a
+            href="/"
+            class="logo"
+        >
+            My Shop
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <a href="/#products">Products</a>
+            <a href="/#about">About</a>
+
+            <a href="{{ url_for('view_cart') }}" class="cart-link">
+                Cart
+                {% if cart_count > 0 %}
+                    <span class="cart-badge">{{ cart_count }}</span>
+                {% endif %}
+            </a>
+        </nav>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <section class="product-detail">
+
+        <div class="container">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    <div class="flash-messages">
+
+                        {% for category, message in messages %}
+
+                            <div class="flash flash-{{ category }}">
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <div class="product-detail-grid">
+
+                <!-- ================================================= -->
+                <!-- PRODUCT GALLERY -->
+                <!-- ================================================= -->
+
+                <div class="product-gallery">
+
+                    <div class="product-main-image">
+
+                        {% if product.offer_active %}
+
+                            <span class="ink-stamp">
+                                Solde
+                                <em>
+                                    -{{ (
+                                        (product.regular_price - product.price)
+                                        / product.regular_price
+                                        * 100
+                                    ) | round | int }}%
+                                </em>
+                            </span>
+
+                        {% endif %}
+
+                        {% if product.images %}
+
+                            <img
+                                id="main-product-image"
+                                src="{{ url_for(
+                                    'static',
+                                    filename='images/products/' ~ product.images[0].filename
+                                ) }}"
+                                alt="{{ product.name }}"
+                            >
+
+                        {% else %}
+
+                            <span>No image yet</span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    {% if product.images|length > 1 %}
+
+                        <div class="product-thumbnails">
+
+                            {% for image in product.images %}
+
+                                <button
+                                    type="button"
+                                    class="thumbnail {% if loop.first %}active{% endif %}"
+                                    data-image="{{ url_for(
+                                        'static',
+                                        filename='images/products/' ~ image.filename
+                                    ) }}"
+                                    aria-label="View product image {{ loop.index }}"
+                                >
+
+                                    <img
+                                        src="{{ url_for(
+                                            'static',
+                                            filename='images/products/' ~ image.filename
+                                        ) }}"
+                                        alt="{{ product.name }} image {{ loop.index }}"
+                                    >
+
+                                </button>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- PRODUCT INFO -->
+                <!-- ================================================= -->
+
+                <div class="product-detail-info">
+
+                    <span class="product-detail-label">
+                        {{ product.category if product.category else "Product" }}
+                    </span>
+
+                    <h1>
+                        {{ product.name }}
+                    </h1>
+
+                    {% if product.offer_active %}
+
+                        <div class="product-detail-price sale-price">
+
+                            <s class="regular-price">
+                                {{ "%.0f"|format(product.regular_price) }} DA
+                            </s>
+
+                            <span class="discounted-price">
+                                {{ "%.0f"|format(product.price) }} DA
+                            </span>
+
+                        </div>
+
+                        {% if product.offer_ends_at %}
+
+                            <p class="offer-countdown">
+                                Promotion ends
+                                {{ product.offer_ends_at.strftime("%Y-%m-%d at %H:%M") }}
+                            </p>
+
+                        {% endif %}
+
+                    {% else %}
+
+                        <div class="product-detail-price">
+                            {{ "%.0f"|format(product.price) }} DA
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if product.description %}
+
+                        <p class="product-detail-description">
+                            {{ product.description }}
+                        </p>
+
+                    {% endif %}
+
+
+                    {% if product.is_sold %}
+
+                        <div class="product-detail-stock sold-label">
+                            Sold out
+                        </div>
+
+                    {% elif product.stock <= 0 %}
+
+                        <div class="product-detail-stock sold-label">
+                            Out of stock
+                        </div>
+
+                    {% else %}
+
+                        <div
+                            class="product-detail-stock available-label {% if product.stock <= shop_settings.low_stock_threshold %}stock-low{% endif %}"
+                        >
+                            {% if product.stock <= shop_settings.low_stock_threshold %}
+                                Only {{ product.stock }} left
+                            {% else %}
+                                {{ product.stock }} available
+                            {% endif %}
+                        </div>
+
+                        <div class="product-detail-actions">
+
+                            <button
+                                type="button"
+                                id="open-order-modal"
+                                class="buy-button-large"
+                            >
+                                Buy now
+                            </button>
+
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'add_to_cart',
+                                    product_id=product.id
+                                ) }}"
+                                class="add-to-cart-form"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="quantity"
+                                    value="1"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="add-to-cart-button"
+                                >
+                                    Add to cart
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+
+    <div class="container">
+
+        <p>
+            © 2026 My Shop
+        </p>
+
+    </div>
+
+</footer>
+
+
+<!-- ========================================================= -->
+<!-- ORDER MODAL -->
+<!-- ========================================================= -->
+
+{% if not product.is_sold and product.stock > 0 %}
+
+<div
+    id="order-modal"
+    class="order-modal"
+    hidden
+>
+
+    <div class="order-modal-overlay"></div>
+
+    <div
+        class="order-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="order-modal-title"
+    >
+
+        <button
+            type="button"
+            id="close-order-modal"
+            class="order-modal-close"
+            aria-label="Close"
+        >
+            ×
+        </button>
+
+
+        <div class="order-modal-header">
+
+            <span class="product-detail-label">
+                Order
+            </span>
+
+            <h2 id="order-modal-title">
+                {{ product.name }}
+            </h2>
+
+            <p>
+                Complete your information to place the order.
+            </p>
+
+        </div>
+
+
+        <form
+            id="order-form"
+            class="order-form"
+            method="POST"
+            action="{{ url_for(
+                'create_order',
+                product_id=product.id
+            ) }}"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+
+            <!-- ================================================= -->
+            <!-- NAME -->
+            <!-- ================================================= -->
+
+            <div class="form-group">
+
+                <label for="customer_name">
+                    Full name
+                </label>
+
+                <input
+                    type="text"
+                    id="customer_name"
+                    name="customer_name"
+                    maxlength="150"
+                    autocomplete="name"
+                    required
+                    placeholder="Your full name"
+                >
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- PHONE -->
+            <!-- ================================================= -->
+
+            <div class="form-group">
+
+                <label for="phone">
+                    Phone number
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    maxlength="30"
+                    autocomplete="tel"
+                    required
+                    placeholder="Your phone number"
+                >
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- PROVINCE (WILAYA) -->
+            <!-- ================================================= -->
+
+            <div class="form-group">
+
+                <label for="wilaya_code">
+                    Province (wilaya)
+                </label>
+
+                <select
+                    id="wilaya_code"
+                    name="wilaya_code"
+                    required
+                >
+
+                    <option value="" disabled selected>
+                        Select your province
+                    </option>
+
+                    {% for code, name in wilayas %}
+
+                        <option value="{{ code }}">
+                            {{ "%02d"|format(code) }} — {{ name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DELIVERY LOCATION -->
+            <!-- ================================================= -->
+
+            <div class="form-group">
+
+                <label for="address">
+                    Delivery address
+                </label>
+
+                <textarea
+                    id="address"
+                    name="address"
+                    rows="4"
+                    maxlength="1000"
+                    autocomplete="street-address"
+                    placeholder="Enter your delivery address"
+                ></textarea>
+
+            </div>
+
+
+            <div class="order-location-choice">
+
+                <div class="location-divider">
+                    <span>OR</span>
+                </div>
+
+
+                <button
+                    type="button"
+                    id="location-button"
+                    class="location-button"
+                >
+                    Use my current location
+                </button>
+
+
+                <p
+                    id="location-status"
+                    class="location-status"
+                    aria-live="polite"
+                ></p>
+
+            </div>
+
+
+            <!-- Hidden GPS values -->
+
+            <input
+                type="hidden"
+                id="latitude"
+                name="latitude"
+            >
+
+            <input
+                type="hidden"
+                id="longitude"
+                name="longitude"
+            >
+
+
+            <!-- ================================================= -->
+            <!-- QUANTITY -->
+            <!-- ================================================= -->
+
+            <div class="form-group">
+
+                <label for="quantity">
+                    Quantity
+                </label>
+
+                <input
+                    type="number"
+                    id="quantity"
+                    name="quantity"
+                    min="1"
+                    max="{{ product.stock }}"
+                    value="1"
+                    required
+                >
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- ORDER SUMMARY -->
+            <!-- ================================================= -->
+
+            <div class="order-summary">
+
+                <div class="order-summary-row">
+
+                    <span>
+                        Unit price
+                    </span>
+
+                    <strong>
+                        {{ "%.0f"|format(product.price) }} DA
+                    </strong>
+
+                </div>
+
+
+                <div class="order-summary-row">
+
+                    <span>
+                        Quantity
+                    </span>
+
+                    <strong id="summary-quantity">
+                        1
+                    </strong>
+
+                </div>
+
+
+                <div class="order-summary-row">
+
+                    <span>
+                        Delivery
+                    </span>
+
+                    <strong id="summary-delivery">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="order-summary-total">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong id="summary-total">
+                        {{ "%.0f"|format(product.price) }} DA
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="order-submit"
+            >
+                Place order
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =========================================================
+       PRODUCT IMAGE GALLERY
+       ========================================================= */
+
+    const mainImage = document.getElementById(
+        "main-product-image"
+    );
+
+    const thumbnails = document.querySelectorAll(
+        ".thumbnail"
+    );
+
+
+    thumbnails.forEach(function (thumbnail) {
+
+        thumbnail.addEventListener(
+            "click",
+            function () {
+
+                if (!mainImage) {
+                    return;
+                }
+
+                const imageUrl =
+                    thumbnail.dataset.image;
+
+                mainImage.src = imageUrl;
+
+
+                thumbnails.forEach(function (item) {
+                    item.classList.remove("active");
+                });
+
+
+                thumbnail.classList.add("active");
+            }
+        );
+
+    });
+
+
+    /* =========================================================
+       ORDER MODAL
+       ========================================================= */
+
+    const modal = document.getElementById(
+        "order-modal"
+    );
+
+    const openButton = document.getElementById(
+        "open-order-modal"
+    );
+
+    const closeButton = document.getElementById(
+        "close-order-modal"
+    );
+
+    const overlay = modal
+        ? modal.querySelector(
+            ".order-modal-overlay"
+        )
+        : null;
+
+
+    function openModal() {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.hidden = false;
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+        const nameInput =
+            document.getElementById(
+                "customer_name"
+            );
+
+        if (nameInput) {
+            nameInput.focus();
+        }
+
+    }
+
+
+    function closeModal() {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.hidden = true;
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+
+    }
+
+
+    if (openButton) {
+
+        openButton.addEventListener(
+            "click",
+            openModal
+        );
+
+    }
+
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            closeModal
+        );
+
+    }
+
+
+    if (overlay) {
+
+        overlay.addEventListener(
+            "click",
+            closeModal
+        );
+
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Escape" &&
+                modal &&
+                !modal.hidden
+            ) {
+
+                closeModal();
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       LOCATION
+       ========================================================= */
+
+    const locationButton =
+        document.getElementById(
+            "location-button"
+        );
+
+    const locationStatus =
+        document.getElementById(
+            "location-status"
+        );
+
+    const latitudeInput =
+        document.getElementById(
+            "latitude"
+        );
+
+    const longitudeInput =
+        document.getElementById(
+            "longitude"
+        );
+
+
+    if (locationButton) {
+
+        locationButton.addEventListener(
+            "click",
+            function () {
+
+                if (!navigator.geolocation) {
+
+                    locationStatus.textContent =
+                        "Location is not supported by your browser.";
+
+                    locationStatus.classList.add(
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                locationButton.disabled = true;
+
+                locationStatus.textContent =
+                    "Getting your location...";
+
+                locationStatus.classList.remove(
+                    "error"
+                );
+
+
+                navigator.geolocation.getCurrentPosition(
+
+                    function (position) {
+
+                        latitudeInput.value =
+                            position.coords.latitude;
+
+                        longitudeInput.value =
+                            position.coords.longitude;
+
+
+                        locationStatus.textContent =
+                            "Your location has been saved.";
+
+                        locationStatus.classList.remove(
+                            "error"
+                        );
+
+                        locationStatus.classList.add(
+                            "success"
+                        );
+
+
+                        locationButton.textContent =
+                            "Location saved";
+
+                        locationButton.disabled = false;
+
+                    },
+
+                    function (error) {
+
+                        latitudeInput.value = "";
+                        longitudeInput.value = "";
+
+
+                        let message =
+                            "Could not get your location.";
+
+                        if (
+                            error.code ===
+                            error.PERMISSION_DENIED
+                        ) {
+
+                            message =
+                                "Location permission was denied.";
+
+                        }
+                        else if (
+                            error.code ===
+                            error.POSITION_UNAVAILABLE
+                        ) {
+
+                            message =
+                                "Your location is currently unavailable.";
+
+                        }
+                        else if (
+                            error.code ===
+                            error.TIMEOUT
+                        ) {
+
+                            message =
+                                "Getting your location timed out.";
+
+                        }
+
+
+                        locationStatus.textContent =
+                            message;
+
+                        locationStatus.classList.add(
+                            "error"
+                        );
+
+                        locationButton.disabled =
+                            false;
+
+                    },
+
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+
+                );
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       QUANTITY / DELIVERY / TOTAL
+       ========================================================= */
+
+    const quantityInput =
+        document.getElementById(
+            "quantity"
+        );
+
+    const summaryQuantity =
+        document.getElementById(
+            "summary-quantity"
+        );
+
+    const summaryDelivery =
+        document.getElementById(
+            "summary-delivery"
+        );
+
+    const summaryTotal =
+        document.getElementById(
+            "summary-total"
+        );
+
+    const wilayaSelect =
+        document.getElementById(
+            "wilaya_code"
+        );
+
+
+    const unitPrice =
+        Number(
+            "{{ product.price }}"
+        );
+
+    const WILAYA_FEES =
+        {{ wilaya_fees | tojson }};
+
+    const DELIVERY_ENABLED =
+        {{ shop_settings.delivery_enabled | tojson }};
+
+    const FREE_DELIVERY_THRESHOLD =
+        {% if shop_settings.free_delivery_threshold is not none %}{{ shop_settings.free_delivery_threshold | float }}{% else %}null{% endif %};
+
+
+    function updateSummary() {
+
+        if (
+            !quantityInput ||
+            !summaryQuantity ||
+            !summaryTotal
+        ) {
+            return;
+        }
+
+
+        let quantity =
+            parseInt(
+                quantityInput.value,
+                10
+            );
+
+
+        if (
+            Number.isNaN(quantity) ||
+            quantity < 1
+        ) {
+
+            quantity = 1;
+
+        }
+
+
+        const maxQuantity =
+            Number(
+                quantityInput.max
+            );
+
+
+        if (
+            maxQuantity &&
+            quantity > maxQuantity
+        ) {
+
+            quantity = maxQuantity;
+
+            quantityInput.value =
+                maxQuantity;
+
+        }
+
+
+        summaryQuantity.textContent =
+            quantity;
+
+
+        const subtotal =
+            unitPrice * quantity;
+
+
+        let deliveryFee = null;
+
+        if (wilayaSelect && wilayaSelect.value) {
+
+            if (!DELIVERY_ENABLED) {
+
+                deliveryFee = 0;
+
+            } else if (
+                WILAYA_FEES[wilayaSelect.value] !== undefined
+            ) {
+
+                deliveryFee =
+                    WILAYA_FEES[wilayaSelect.value];
+
+                if (
+                    deliveryFee > 0 &&
+                    FREE_DELIVERY_THRESHOLD !== null &&
+                    subtotal >= FREE_DELIVERY_THRESHOLD
+                ) {
+
+                    deliveryFee = 0;
+
+                }
+
+            }
+
+        }
+
+
+        if (deliveryFee === null) {
+
+            summaryDelivery.textContent = "—";
+
+            summaryTotal.textContent =
+                `${Math.round(subtotal)} DA`;
+
+        } else {
+
+            summaryDelivery.textContent =
+                deliveryFee > 0
+                    ? `${Math.round(deliveryFee)} DA`
+                    : "Free";
+
+            summaryTotal.textContent =
+                `${Math.round(subtotal + deliveryFee)} DA`;
+
+        }
+
+    }
+
+
+    if (quantityInput) {
+
+        quantityInput.addEventListener(
+            "input",
+            updateSummary
+        );
+
+        quantityInput.addEventListener(
+            "change",
+            updateSummary
+        );
+
+        updateSummary();
+
+    }
+
+    if (wilayaSelect) {
+
+        wilayaSelect.addEventListener(
+            "change",
+            updateSummary
+        );
+
+    }
+
+
+    /* =========================================================
+       CLIENT-SIDE ORDER VALIDATION
+       Address OR GPS location
+       ========================================================= */
+
+    const orderForm =
+        document.getElementById(
+            "order-form"
+        );
+
+    const addressInput =
+        document.getElementById(
+            "address"
+        );
+
+
+    if (orderForm) {
+
+        orderForm.addEventListener(
+            "submit",
+            function (event) {
+
+                const hasAddress =
+                    addressInput.value.trim() !== "";
+
+
+                const hasLocation =
+                    latitudeInput.value.trim() !== "" &&
+                    longitudeInput.value.trim() !== "";
+
+
+                /*
+                 * Customer must provide one of:
+                 *
+                 *   address
+                 *   OR
+                 *   GPS coordinates
+                 */
+
+                if (
+                    !hasAddress &&
+                    !hasLocation
+                ) {
+
+                    event.preventDefault();
+
+
+                    locationStatus.textContent =
+                        "Please enter a delivery address or use your current location.";
+
+                    locationStatus.classList.add(
+                        "error"
+                    );
+
+
+                    addressInput.focus();
+
+                    return;
+
+                }
+
+            }
+        );
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>

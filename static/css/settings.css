@@ -1,0 +1,281 @@
+/* ============================================================
+   SETTINGS PAGE
+   ============================================================ */
+
+.settings-layout {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.75fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.settings-main,
+.settings-sidebar {
+    min-width: 0;
+}
+
+.settings-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.settings-section {
+    padding: 26px;
+}
+
+.settings-section .form-section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.settings-section-number {
+    flex: 0 0 auto;
+    color: var(--ochre-dark);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.settings-section .form-section-heading h2 {
+    margin: 0;
+}
+
+.settings-section .form-section-heading p {
+    margin: 5px 0 0;
+}
+
+.settings-number-grid {
+    margin-top: 22px;
+}
+
+.settings-short-field {
+    max-width: 330px;
+}
+
+.settings-help {
+    margin: 8px 0 0;
+    color: var(--ink-soft);
+    font-size: 0.77rem;
+    line-height: 1.55;
+}
+
+/* ============================================================
+   TOGGLE
+   ============================================================ */
+
+.settings-toggle-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 15px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-dim);
+    cursor: pointer;
+}
+
+.settings-toggle-row > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-toggle-row strong {
+    font-size: 0.88rem;
+}
+
+.settings-toggle-row > div span {
+    color: var(--ink-soft);
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.settings-toggle-row input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toggle-ui {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    flex: 0 0 46px;
+    border-radius: 999px;
+    background: #c8c3b7;
+    transition: background 0.2s ease;
+}
+
+.toggle-ui::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 3px rgba(28, 35, 33, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.settings-toggle-row input:checked + .toggle-ui {
+    background: var(--pine);
+}
+
+.settings-toggle-row input:checked + .toggle-ui::after {
+    transform: translateX(20px);
+}
+
+.settings-toggle-row input:focus-visible + .toggle-ui {
+    outline: 2px solid var(--pine);
+    outline-offset: 3px;
+}
+
+/* ============================================================
+   READ ONLY SETTING
+   ============================================================ */
+
+.settings-readonly-row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.settings-readonly-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-readonly-row span {
+    color: var(--ink-soft);
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.settings-badge {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper-dim);
+    font-size: 0.73rem;
+}
+
+/* ============================================================
+   SAVE
+   ============================================================ */
+
+.settings-save-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.settings-save-button {
+    width: auto;
+    min-width: 150px;
+}
+
+/* ============================================================
+   SECURITY
+   ============================================================ */
+
+.security-section {
+    position: sticky;
+    top: 20px;
+}
+
+.settings-account-card {
+    margin-bottom: 22px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid var(--line);
+    background: var(--paper-dim);
+}
+
+.settings-account-card span {
+    color: var(--ink-soft);
+    font-size: 0.74rem;
+}
+
+.settings-account-card strong {
+    font-size: 0.9rem;
+}
+
+.password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.password-button {
+    width: 100%;
+    margin-top: 2px;
+}
+
+.settings-security-note {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.settings-security-note strong {
+    font-size: 0.8rem;
+}
+
+.settings-security-note span {
+    color: var(--ink-soft);
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .security-section {
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+    .settings-section {
+        padding: 20px;
+    }
+
+    .settings-readonly-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .settings-save-row {
+        justify-content: stretch;
+    }
+
+    .settings-save-button {
+        width: 100%;
+    }
+}
