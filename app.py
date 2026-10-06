@@ -3489,6 +3489,44 @@ def admin_logout():
 
 
 # ============================================================
+# CREATE FIRST ADMIN (CLI)
+#
+# Usage:  flask create-admin
+# Reads ADMIN_USERNAME and ADMIN_PASSWORD from the environment.
+# Safe to run on every deploy: it does nothing if an admin
+# with that username already exists.
+# ============================================================
+
+@app.cli.command("create-admin")
+def create_admin_command():
+    username = os.environ.get("ADMIN_USERNAME", "").strip()
+    password = os.environ.get("ADMIN_PASSWORD", "")
+
+    if not username or not password:
+        print("create-admin: ADMIN_USERNAME / ADMIN_PASSWORD not set, skipping.")
+        return
+
+    if len(password) < 8:
+        print("create-admin: ADMIN_PASSWORD must have at least 8 characters.")
+        return
+
+    existing = Admin.query.filter_by(username=username).first()
+
+    if existing is not None:
+        print(f"create-admin: admin '{username}' already exists, nothing to do.")
+        return
+
+    db.session.add(
+        Admin(
+            username=username,
+            password_hash=generate_password_hash(password),
+        )
+    )
+    db.session.commit()
+    print(f"create-admin: admin '{username}' created.")
+
+
+# ============================================================
 # RUN APPLICATION
 # ============================================================
 
