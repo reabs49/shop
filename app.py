@@ -73,10 +73,13 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 # Set FLASK_DEBUG=1 in your local .env only. Never on the server.
 DEBUG_MODE = os.environ.get("FLASK_DEBUG") == "1"
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL",
-    "sqlite:///shop.db"
-)
+# Render/PostgreSQL may provide DATABASE_URL as postgres://... .
+# SQLAlchemy expects the modern postgresql:// scheme.
+database_url = os.environ.get("DATABASE_URL", "sqlite:///shop.db")
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
@@ -130,11 +133,19 @@ ADMIN_PATH = os.environ["ADMIN_PATH"]
 # IMAGE UPLOAD CONFIGURATION
 # ============================================================
 
-UPLOAD_FOLDER = (
-    Path(app.static_folder)
-    / "images"
-    / "products"
-)
+# By default, product images stay in the project for local development.
+# In production, set UPLOAD_FOLDER to a persistent mounted directory
+# (or replace this local storage with object storage such as S3/R2).
+upload_folder_env = os.environ.get("UPLOAD_FOLDER")
+
+if upload_folder_env:
+    UPLOAD_FOLDER = Path(upload_folder_env).expanduser().resolve()
+else:
+    UPLOAD_FOLDER = (
+        Path(app.static_folder)
+        / "images"
+        / "products"
+    )
 
 UPLOAD_FOLDER.mkdir(
     parents=True,
