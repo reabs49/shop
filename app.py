@@ -244,12 +244,12 @@ CART_SESSION_KEY = "cart"
 # ============================================================
 
 def get_shop_settings():
-    """Return the singleton shop settings row created by migrations."""
+    """Return the singleton shop settings row, creating it if missing."""
     settings = db.session.get(ShopSettings, 1)
     if settings is None:
-        raise RuntimeError(
-            "Shop settings are missing. Run flask db upgrade."
-        )
+        settings = ShopSettings(id=1)
+        db.session.add(settings)
+        db.session.commit()
     return settings
 
 
